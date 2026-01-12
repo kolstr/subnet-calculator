@@ -109,9 +109,6 @@
 
         // Handle slider changes
         function handleSliderChange() {
-            if (slider.value < minSubnet) {
-                slider.value = minSubnet;
-            }
             if (slider.value > 30) {
                 slider.value = 30;
             }
@@ -199,11 +196,12 @@
                     subnetValue.textContent = "/" + defaultSubnet.toString();
                     previousIpClass = ipClass;
                 }
-                minSubnet = defaultSubnet;
+                minSubnet = 0;
             }
 
             const subnetMask = parseInt(slider.value);
             const binaryIp = ipToBinary(ipv4);
+            const defaultSubnet = getDefaultSubnet(ipClass);
 
             // Calculate Net ID and Broadcast
             const netIdBinary = binaryIp.substring(0, subnetMask).padEnd(32, "0");
@@ -217,11 +215,11 @@
             form.hostAddresses.value = numHostAddresses > 0 ? numHostAddresses : 0;
 
             // Calculate subnets
-            const numSubnets = Math.pow(2, subnetMask - minSubnet);
+            const numSubnets = subnetMask > defaultSubnet ? Math.pow(2, subnetMask - defaultSubnet) : 1;
             form.subnets.value = numSubnets;
 
             // Calculate subnet ID
-            const subnetIdBinary = binaryIp.substring(minSubnet, subnetMask);
+            const subnetIdBinary = subnetMask > defaultSubnet ? binaryIp.substring(defaultSubnet, subnetMask) : "";
             form.subnetId.value = subnetIdBinary ? parseInt(subnetIdBinary, 2) : 0;
 
             // Calculate subnet mask in dotted decimal notation
@@ -266,6 +264,7 @@
             const ipv4 = ipv4Input.value;
             const subnetMask = parseInt(slider.value);
             const ipClass = getIpClass(ipv4);
+            const defaultSubnetMask = getDefaultSubnet(ipClass);
             const subnetIdValue = parseInt(form.subnetId.value);
 
             tableContainer.innerHTML = ""; // Clear previous table
@@ -274,7 +273,7 @@
             const tbody = document.createElement("tbody");
             tbody.className = "text-sm text-gray-400";
 
-            const numSubnets = Math.pow(2, subnetMask - minSubnet);
+            const numSubnets = subnetMask > defaultSubnetMask ? Math.pow(2, subnetMask - defaultSubnetMask) : 1;
 
             // Check if table would be too large
             if (numSubnets > 512) {
@@ -283,10 +282,10 @@
                 }
             }
 
-            // Check if using default subnet mask
-            const isDefaultSubnet = (ipClass === "A" && subnetMask === 8) ||
-                (ipClass === "B" && subnetMask === 16) ||
-                (ipClass === "C" && subnetMask === 24);
+            // Check if using default subnet mask or supernetting
+            const isDefaultSubnet = (ipClass === "A" && subnetMask <= 8) ||
+                (ipClass === "B" && subnetMask <= 16) ||
+                (ipClass === "C" && subnetMask <= 24);
 
             if (isDefaultSubnet) {
                 // Add single row for default subnet
