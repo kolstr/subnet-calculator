@@ -113,6 +113,7 @@
                 slider.value = 30;
             }
             subnetValue.textContent = "/" + slider.value;
+            tableContainer.innerHTML = ""; // Clear the subnet table as it's no longer valid
             calculateSubnet({ target: { id: 'subnet' } });
         }
 
