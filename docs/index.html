@@ -119,6 +119,7 @@
 
         // Handle IPv4 input changes
         function handleIpv4Change(event) {
+            tableContainer.innerHTML = ""; // Clear the subnet table as it's no longer valid
             calculateSubnet(event);
             updateButtonState();
         }
